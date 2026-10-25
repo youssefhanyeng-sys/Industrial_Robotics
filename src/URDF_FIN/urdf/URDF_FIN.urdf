@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter for ROS2! Originally created by Stephen Brawner (brawner@gmail.com) 
+     and adapted for ROS 2 by Dr. BENMOUSSA Samir (benmous2a.samir@gmail.com) 
+     Commit Version:   Build Version: 2.0.9746.38549
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot name="URDF_FIN">
+  <link name="base_link">
+    <inertial>
+      <origin xyz="-7.68725231062783E-09 0.000117196159259873 0.0223035726629275" rpy="0 0 0" />
+      <mass value="0.0960374647687131" />
+      <inertia ixx="0.000137660900428952" ixy="-6.84507669336356E-11" ixz="-4.4733775428922E-12" iyy="0.000127992374265441" iyz="3.91396755618806E-06" izz="0.000207983638444363" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/base_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.12156862745098 0.419607843137255 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="Link_1">
+    <inertial>
+      <origin xyz="-0.00386314068936518 0.0172894151625571 -0.00532567366153397" rpy="0 0 0" />
+      <mass value="0.0680383082919641" />
+      <inertia ixx="5.28975388574567E-05" ixy="-3.30482924517313E-07" ixz="6.45505800770605E-06" iyy="5.46763891539817E-05" iyz="8.10375365682899E-06" izz="5.02533765794886E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Link_1.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Link_1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_1" type="revolute">
+    <origin xyz="0 0 0.0566" rpy="1.5708 0 0.73316" />
+    <parent link="base_link" />
+    <child link="Link_1" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="3.14" effort="300" velocity="3" />
+  </joint>
+  <link name="Link_2">
+    <inertial>
+      <origin xyz="-0.00013011 0.05859 0.0017688" rpy="0 0 0" />
+      <mass value="0.064393" />
+      <inertia ixx="0.00010704" ixy="-1.6548E-09" ixz="2.3843E-10" iyy="9.11E-06" iyz="2.3961E-07" izz="0.00011184" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Link_2.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0 0.2549 0.92157 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Link_2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_2" type="revolute">
+    <origin xyz="0.012317 0.040453 -0.0074002" rpy="0 0.83763 0" />
+    <parent link="Link_1" />
+    <child link="Link_2" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-1.57" upper="1.57" effort="300" velocity="3" />
+  </joint>
+  <link name="Link_3">
+    <inertial>
+      <origin xyz="0.0166088529668831 -0.000277847749422631 -0.0392853073506973" rpy="0 0 0" />
+      <mass value="0.0502682771986249" />
+      <inertia ixx="5.81489713652172E-05" ixy="5.48486938872266E-11" ixz="2.87532534162383E-07" iyy="5.46008373630744E-05" iyz="-6.95833536768322E-08" izz="9.28677000263372E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Link_3.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Link_3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_3" type="revolute">
+    <origin xyz="0 0.12 0" rpy="1.5708 1.5708 0" />
+    <parent link="Link_2" />
+    <child link="Link_3" />
+    <axis xyz="1 0 0" />
+    <limit lower="0" upper="3.14" effort="300" velocity="3" />
+  </joint>
+  <link name="Link_4">
+    <inertial>
+      <origin xyz="0.0052996 0.012221 0.0050519" rpy="0 0 0" />
+      <mass value="0.014572" />
+      <inertia ixx="4.5666E-06" ixy="-5.785E-07" ixz="4.0091E-09" iyy="2.4638E-06" iyz="1.1113E-08" izz="3.6019E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Link_4.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.89412 0.89412 0.89412 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Link_4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_4" type="revolute">
+    <origin xyz="0.0167 0.00505 -0.0966" rpy="-1.5708 0 1.5708" />
+    <parent link="Link_3" />
+    <child link="Link_4" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="3.14" effort="300" velocity="3" />
+  </joint>
+  <link name="Link_5">
+    <inertial>
+      <origin xyz="-0.016975 0.031775 0.0049637" rpy="0 0 0" />
+      <mass value="0.020446" />
+      <inertia ixx="9.3527E-06" ixy="3.211E-06" ixz="6.303E-07" iyy="5.0773E-06" iyz="-1.2617E-06" izz="1.3162E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Link_5.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.12157 0.41961 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Link_5.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Joint_5" type="revolute">
+    <origin xyz="0.0268 0.023 0.005" rpy="0 0 0" />
+    <parent link="Link_4" />
+    <child link="Link_5" />
+    <axis xyz="-1 0 0" />
+    <limit lower="0" upper="3.14" effort="300" velocity="3" />
+  </joint>
+  <link name="Left_Link">
+    <inertial>
+      <origin xyz="0.00160565148042321 0.0301017759818357 -0.00362308407034775" rpy="0 0 0" />
+      <mass value="0.00442419894630085" />
+      <inertia ixx="9.78162239273495E-07" ixy="5.44875859491941E-08" ixz="-3.64093440559033E-11" iyy="1.34145862568159E-07" iyz="-1.55820510089473E-09" izz="1.09880703787669E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Left_Link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.286274509803922 0.662745098039216 0.329411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Left_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Left_Joint" type="revolute">
+    <origin xyz="-0.0115 0.04029 0.0175" rpy="0 0 0" />
+    <parent link="Link_5" />
+    <child link="Left_Link" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.57" effort="300" velocity="3" />
+  </joint>
+  <link name="Right_Link">
+    <inertial>
+      <origin xyz="-0.0025514 0.030196 -0.003646" rpy="0 0 0" />
+      <mass value="0.0043641" />
+      <inertia ixx="9.749E-07" ixy="-3.4887E-08" ixz="3.6799E-11" iyy="1.2906E-07" iyz="-1.4058E-09" izz="1.0908E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Right_Link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.28627 0.66275 0.32941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://URDF_FIN/meshes/Right_Link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="Right_Joint" type="revolute">
+    <origin xyz="-0.03885 0.03994 0.0175" rpy="0 0 0" />
+    <parent link="Link_5" />
+    <child link="Right_Link" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.57" upper="0" effort="300" velocity="3" />
+  </joint>
+  <ros2_control name="URDF_FIN_system" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+    <joint name="Joint_1">
+      <command_interface name="position">
+        <param name="min">0</param>
+        <param name="max">3.14</param>
+      </command_interface>
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+    <joint name="Joint_2">
+      <command_interface name="position">
+        <param name="min">-1.57</param>
+        <param name="max">1.57</param>
+      </command_interface>
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+    <joint name="Joint_3">
+      <command_interface name="position">
+        <param name="min">0</param>
+        <param name="max">3.14</param>
+      </command_interface>
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+    <joint name="Joint_4">
+      <command_interface name="position">
+        <param name="min">0</param>
+        <param name="max">3.14</param>
+      </command_interface>
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+    <joint name="Joint_5">
+      <command_interface name="position">
+        <param name="min">0</param>
+        <param name="max">3.14</param>
+      </command_interface>
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+    <joint name="Left_Joint">
+      <command_interface name="position">
+        <param name="min">0</param>
+        <param name="max">1.57</param>
+      </command_interface>
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+    <joint name="Right_Joint">
+      <command_interface name="position">
+        <param name="min">-1.57</param>
+        <param name="max">0</param>
+      </command_interface>
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+  </ros2_control>
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find URDF_FIN)/config/URDF_FIN_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+</robot>
