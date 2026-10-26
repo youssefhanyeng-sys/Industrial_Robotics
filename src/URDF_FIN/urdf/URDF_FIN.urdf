@@ -53,7 +53,7 @@
     <parent link="base_link" />
     <child link="Link_1" />
     <axis xyz="0 1 0" />
-    <limit lower="0" upper="3.14" effort="300" velocity="3" />
+    <limit lower="0" upper="6.27" effort="300" velocity="3" />//rad
   </joint>
   <link name="Link_2">
     <inertial>
@@ -82,7 +82,7 @@
     <parent link="Link_1" />
     <child link="Link_2" />
     <axis xyz="0 0 -1" />
-    <limit lower="-1.57" upper="1.57" effort="300" velocity="3" />
+    <limit lower="-0.85" upper="0.85" effort="300" velocity="3" />
   </joint>
   <link name="Link_3">
     <inertial>
@@ -111,7 +111,7 @@
     <parent link="Link_2" />
     <child link="Link_3" />
     <axis xyz="1 0 0" />
-    <limit lower="0" upper="3.14" effort="300" velocity="3" />
+    <limit lower="-1.3" upper="1.3" effort="300" velocity="3" />
   </joint>
   <link name="Link_4">
     <inertial>
@@ -140,7 +140,7 @@
     <parent link="Link_3" />
     <child link="Link_4" />
     <axis xyz="0 1 0" />
-    <limit lower="0" upper="3.14" effort="300" velocity="3" />
+    <limit lower="0" upper="6.27" effort="300" velocity="3" />
   </joint>
   <link name="Link_5">
     <inertial>
@@ -169,7 +169,7 @@
     <parent link="Link_4" />
     <child link="Link_5" />
     <axis xyz="-1 0 0" />
-    <limit lower="0" upper="3.14" effort="300" velocity="3" />
+    <limit lower="-1.85" upper="2.2" effort="300" velocity="3" />
   </joint>
   <link name="Left_Link">
     <inertial>
@@ -198,7 +198,7 @@
     <parent link="Link_5" />
     <child link="Left_Link" />
     <axis xyz="0 0 1" />
-    <limit lower="0" upper="1.57" effort="300" velocity="3" />
+    <limit lower="-0.78" upper="0" effort="300" velocity="3" />
   </joint>
   <link name="Right_Link">
     <inertial>
@@ -227,7 +227,7 @@
     <parent link="Link_5" />
     <child link="Right_Link" />
     <axis xyz="0 0 1" />
-    <limit lower="-1.57" upper="0" effort="300" velocity="3" />
+    <limit lower="0" upper="0.78" effort="300" velocity="3" />
   </joint>
   <ros2_control name="URDF_FIN_system" type="system">
     <hardware>
