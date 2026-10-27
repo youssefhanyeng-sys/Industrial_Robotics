@@ -6,13 +6,16 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Exec
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
-
+from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     package_name = 'URDF_FIN'
     urdf_file = os.path.join(
         get_package_share_directory(package_name), 'urdf', 'URDF_FIN.urdf')
-    robot_description = Command(['xacro ', urdf_file])
+    robot_description = ParameterValue(
+    	Command(['xacro ', urdf_file]),
+    	value_type=str
+    )
 
     world = LaunchConfiguration('world')
 
