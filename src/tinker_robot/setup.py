@@ -24,7 +24,10 @@ setup(
     },
     entry_points={
         'console_scripts': [
-		'joint_monitor = tinker_robot.joint_monitor:main',
+		        'joint_monitor = tinker_robot.joint_monitor:main',
+                'controller_publisher = tinker_robot.controller_publisher:main',
+                'joint_command_subscriber = tinker_robot.joint_command_subscriber:main',
+                'joint_gui_controller = tinker_robot.joint_gui_controller:main',
         ],
     },
 )
