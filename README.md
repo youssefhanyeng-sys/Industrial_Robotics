@@ -454,3 +454,170 @@ The trajectory topic should have **one** user command publisher, the synchroniza
 
 This controller layer is designed for simulation and is a step toward adding command sources such as an ESP32 without changing the downstream Gazebo trajectory interface. The three existing control modes should be tested after modifying joint limits, robot geometry, or `ros2_control` parameters.
 <!-- END TINKER_ARM_SYNC_DOCS -->
+
+
+---
+
+## TINKER_ARM — Seven-terminal launch (six existing processes + MoveIt 2)
+
+This setup **retains the original six-terminal commands exactly as documented above** and adds MoveIt 2 as **Terminal 7**. Start each terminal in order, with Gazebo's controllers active before moving the arm.
+
+| Terminal | Component | Purpose |
+| --- | --- | --- |
+| 1 | Gazebo Harmonic | Robot simulation and ROS 2 controllers |
+| 2 | Original RViz | Visualization of Gazebo feedback |
+| 3 | `joint_command_subscriber` | Central hub for the three manual command interfaces |
+| 4 | Original ROS joint sliders | Radians |
+| 5 | Interactive terminal controller | Degrees |
+| 6 | Tkinter joint GUI | Degrees |
+| **7** | **MoveIt 2 and MoveIt RViz** | **Planning and trajectory execution** |
+
+### Before starting
+
+You need a **working local MoveIt configuration package** named `tinker_moveit_config`. **This package is not currently present on the GitHub `main` branch**, so a fresh clone alone cannot run Terminal 7. Install MoveIt 2 for Jazzy and build/source your local configuration in the workspace.
+
+**Permanent controller setting:** In your existing `src/URDF_FIN/config/URDF_FIN_controllers.yaml`, add this line **inside the existing** `joint_trajectory_controller → ros__parameters` mapping (not under `controller_manager`):
+
+~~~yaml
+    allow_partial_joints_goal: true
+~~~
+
+The same controller handles all seven joints; this setting lets it accept arm-only (5-joint) and gripper-only (2-joint) trajectories. Rebuild `URDF_FIN`, then **restart Gazebo**:
+
+~~~bash
+cd ~/Industrial_Robotics
+source /opt/ros/jazzy/setup.bash
+colcon build --symlink-install --packages-select URDF_FIN
+source install/setup.bash
+~~~
+
+> The YAML currently committed to GitHub does **not** include this setting yet. Apply it to your local YAML before launching, or commit your tested YAML separately.
+
+### Terminal 1 — Gazebo
+
+~~~bash
+cd ~/Industrial_Robotics
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+export GZ_SIM_RESOURCE_PATH="$HOME/Industrial_Robotics/src:$HOME/Industrial_Robotics/install/URDF_FIN/share:${GZ_SIM_RESOURCE_PATH}"
+ros2 launch URDF_FIN gazebo.launch.py
+~~~
+
+### Terminal 2 — Original RViz
+
+~~~bash
+source /opt/ros/jazzy/setup.bash
+source ~/Industrial_Robotics/install/setup.bash
+ros2 run rviz2 rviz2 \
+  -d ~/Industrial_Robotics/src/URDF_FIN/config/urdf.rviz \
+  --ros-args -p use_sim_time:=true
+~~~
+
+### Terminal 3 — Synchronization hub
+
+~~~bash
+source /opt/ros/jazzy/setup.bash
+source ~/Industrial_Robotics/install/setup.bash
+ros2 run tinker_robot joint_command_subscriber
+~~~
+
+Wait for `READY: all seven controller joints detected; synchronized modes enabled.`
+
+### Terminal 4 — Original joint sliders
+
+~~~bash
+source /opt/ros/jazzy/setup.bash
+source ~/Industrial_Robotics/install/setup.bash
+ros2 run joint_state_publisher_gui \
+  joint_state_publisher_gui \
+  --ros-args \
+  -r /joint_states:=/slider_joint_states \
+  -p source_list:="['/tinker/joint_sync']"
+~~~
+
+### Terminal 5 — Terminal controller
+
+~~~bash
+source /opt/ros/jazzy/setup.bash
+source ~/Industrial_Robotics/install/setup.bash
+ros2 run tinker_robot controller_publisher
+~~~
+
+Example: `Joint_3 25`, then `show`.
+
+### Terminal 6 — Tkinter GUI
+
+~~~bash
+source /opt/ros/jazzy/setup.bash
+source ~/Industrial_Robotics/install/setup.bash
+ros2 run tinker_robot joint_gui_controller
+~~~
+
+### Terminal 7 — MoveIt 2 + MoveIt RViz (one terminal)
+
+This recreates the tested temporary combined launch file in `/tmp` and starts **only** the MoveIt planning server and MoveIt RViz, with `use_sim_time` enabled. It does not launch Gazebo again.
+
+~~~bash
+cat > /tmp/tinker_moveit_terminal7.launch.py <<'EOF'
+import os
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import SetParameter
+from ament_index_python.packages import get_package_share_directory
+
+def generate_launch_description():
+    pkg = get_package_share_directory('tinker_moveit_config')
+
+    moveit = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg, 'launch', 'move_group.launch.py')
+        )
+    )
+
+    rviz = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg, 'launch', 'moveit_rviz.launch.py')
+        )
+    )
+
+    return LaunchDescription([
+        SetParameter(name='use_sim_time', value=True),
+        moveit,
+        rviz
+    ])
+EOF
+
+cd ~/Industrial_Robotics
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 launch /tmp/tinker_moveit_terminal7.launch.py
+~~~
+
+The original RViz (Terminal 2) and MoveIt RViz (Terminal 7) are **separate windows**, as intended.
+
+### Verify and use the system
+
+In a spare terminal, source Jazzy and the workspace, then check:
+
+~~~bash
+source /opt/ros/jazzy/setup.bash
+source ~/Industrial_Robotics/install/setup.bash
+ros2 control list_controllers
+ros2 param get /joint_trajectory_controller allow_partial_joints_goal
+ros2 param get /move_group use_sim_time
+ros2 topic echo /clock --once
+~~~
+
+Both controllers should be `active`. Both parameter checks should return `True`, and `/clock` should publish Gazebo simulation time.
+
+In **MoveIt RViz**, select the `arm_group` planning group, use Start State `<current>`, choose a different valid goal (for example `pose_2`), and press **Plan & Execute**. This computes a fresh trajectory from the latest robot state instead of executing an old stored plan.
+
+### Synchronization and command-conflict warning
+
+The **original three manual interfaces** remain synchronized through the existing hub. MoveIt receives robot-position feedback from Gazebo's `/joint_states` and can plan from the actual robot state after a manual movement.
+
+**MoveIt is not yet fully integrated into the hub's shared target state:** its `FollowJointTrajectory` action sends goals directly to the Gazebo trajectory controller, while the original hub uses the controller's trajectory command topic. Gazebo and RViz (and the GUI's **actual position** labels) can reflect MoveIt-driven movement, but the hub's stored **target positions** and original sliders are **not guaranteed to update to MoveIt's new targets** without further code changes.
+
+**Do not operate manual controls while MoveIt is executing**, because concurrent topic commands can interfere with an action trajectory. Do not run the legacy `slider_bridge.py`, `display.launch.py`, or duplicate controller managers alongside these seven terminals.
+
