@@ -555,7 +555,23 @@ ros2 run tinker_robot joint_gui_controller
 
 ### Terminal 7 — MoveIt 2 + MoveIt RViz (one terminal)
 
-This recreates the tested temporary combined launch file in `/tmp` and starts **only** the MoveIt planning server and MoveIt RViz, with `use_sim_time` enabled. It does not launch Gazebo again.
+**Run these commands in Terminal 7.** The launch file must already exist (see the one-time setup below). This starts MoveIt 2 and MoveIt RViz without launching Gazebo again.
+
+~~~bash
+cd ~/Industrial_Robotics
+
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+
+ros2 launch /tmp/tinker_moveit_terminal7.launch.py
+~~~
+
+The original RViz (Terminal 2) and MoveIt RViz (Terminal 7) open as separate windows.
+
+<details>
+<summary>One-time setup: create the Terminal 7 launch file (only if it is missing)</summary>
+
+Ubuntu can clear `/tmp` after restarting. If `/tmp/tinker_moveit_terminal7.launch.py` is missing, create it before running the short Terminal 7 command:
 
 ~~~bash
 cat > /tmp/tinker_moveit_terminal7.launch.py <<'EOF'
@@ -588,13 +604,9 @@ def generate_launch_description():
     ])
 EOF
 
-cd ~/Industrial_Robotics
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-ros2 launch /tmp/tinker_moveit_terminal7.launch.py
 ~~~
 
-The original RViz (Terminal 2) and MoveIt RViz (Terminal 7) are **separate windows**, as intended.
+</details>
 
 ### Verify and use the system
 
