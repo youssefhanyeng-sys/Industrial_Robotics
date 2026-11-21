@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: URDF_FIN
+    relative_path: urdf/URDF_FIN.urdf
+  srdf:
+    relative_path: config/URDF_FIN.srdf
+  package_settings:
+    author_name: Youssef Hany
+    author_email: youssefhanyeng@gmail.com
+    generated_timestamp: 1795286008
