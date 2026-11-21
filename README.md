@@ -670,9 +670,11 @@ ros2 launch moveit_setup_assistant setup_assistant.launch.py
 
 Named robot poses are stored in the MoveIt configuration's SRDF (for this robot, `src/tinker_moveit_config/config/URDF_FIN.srdf`).
 
-### 4. Back up the **existing** MoveIt configuration before generating files
+### 4. Back up the working package, then generate **only the SRDF**
 
-Do not put the backup inside `src/`, because colcon may detect it as a second copy of the same ROS package.
+**Clicking Save in Robot Poses does not necessarily write the updated poses to the installed MoveIt configuration.** The tested procedure is to regenerate the SRDF through **Configuration Files**.
+
+Before generating, back up the existing MoveIt package **outside `src/`** so colcon does not detect a second ROS package:
 
 ~~~bash
 mkdir -p ~/Industrial_Robotics/backups
@@ -680,7 +682,39 @@ cp -a ~/Industrial_Robotics/src/tinker_moveit_config \
       ~/Industrial_Robotics/backups/tinker_moveit_config_before_poses
 ~~~
 
-In MoveIt Setup Assistant, open **Configuration Files** and generate the updated configuration into the **existing** `tinker_moveit_config` location. Review any files offered for regeneration so the working `moveit_controllers.yaml`, custom launches, and joint-limit settings are not accidentally replaced. If uncertain, preserve those working files and update only the SRDF named poses.
+In the **MoveIt Setup Assistant**:
+
+1. Check that the new named pose appears under **Robot Poses** and click **Save**.
+2. Click **Configuration Files** in the left sidebar.
+3. Keep the existing output directory: `/home/joe/Industrial_Robotics/src/tinker_moveit_config`.
+4. If a **Files Modified** warning appears, acknowledge it and inspect the generation checklist.
+5. **Uncheck every generated file except `config/URDF_FIN.srdf`.**
+6. Confirm `config/moveit_controllers.yaml`, `config/joint_limits.yaml`, and all `launch/*.launch.py` files are **unchecked**.
+7. Click **Generate Package**, then exit Setup Assistant.
+
+**Why only SRDF?** Named poses are stored in `config/URDF_FIN.srdf`. Keeping the other files unchecked preserves the working MoveIt controllers, joint limits, Gazebo compatibility, and seven-terminal launches.
+
+### Fix verified for `hand_group` — left joint must be negative
+
+After adding poses, the `close_hand` plan failed with OMPL's `Insufficient states in sampleable goal region`. The SRDF had mistakenly saved `Left_Joint` as **`+0.06` rad** (outside the robot's joint range of `-0.78` to `0` rad). The correction that restored planning was:
+
+~~~xml
+<group_state name="close_hand" group="hand_group">
+    <joint name="Left_Joint" value="-0.06"/>
+    <joint name="Right_Joint" value="0.06"/>
+</group_state>
+~~~
+
+The two fingers have opposite joint signs: **left negative, right positive**. Keep saved gripper poses within their URDF limits. If the Setup Assistant regenerated an incorrect sign, carefully edit **only** the `close_hand` group state in `src/tinker_moveit_config/config/URDF_FIN.srdf` and preserve the remaining SRDF.
+
+Verify the saved arm and hand poses before rebuilding:
+
+~~~bash
+cd ~/Industrial_Robotics
+grep -n 'group_state' src/tinker_moveit_config/config/URDF_FIN.srdf
+grep -A 3 'group_state name="close_hand"' \
+  src/tinker_moveit_config/config/URDF_FIN.srdf
+~~~
 
 ### 5. Rebuild and launch Terminal 7 again
 
