@@ -633,3 +633,78 @@ The **original three manual interfaces** remain synchronized through the existin
 
 **Do not operate manual controls while MoveIt is executing**, because concurrent topic commands can interfere with an action trajectory. Do not run the legacy `slider_bridge.py`, `display.launch.py`, or duplicate controller managers alongside these seven terminals.
 
+
+---
+
+## MoveIt 2 — Add or edit saved robot poses
+
+Use **MoveIt Setup Assistant** to create named poses such as `pose_3`, `home`, or `gripper_open`. **The Setup Assistant edits the MoveIt configuration; Terminal 7 runs the resulting poses** in MoveIt RViz. The original six-terminal commands do not change.
+
+### 1. Open MoveIt Setup Assistant in a separate terminal
+
+For editing, stop **Terminal 7 (MoveIt + MoveIt RViz)** first, and leave the original six-terminal commands untouched. Then:
+
+~~~bash
+cd ~/Industrial_Robotics
+
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+
+ros2 launch moveit_setup_assistant setup_assistant.launch.py
+~~~
+
+### 2. Load your **existing** MoveIt configuration
+
+1. Choose **Edit Existing MoveIt Configuration Package**, **not** Create New.
+2. Select `/home/joe/Industrial_Robotics/src/tinker_moveit_config`.
+3. Wait for the robot and its existing planning groups and poses to load.
+
+### 3. Create the pose
+
+1. In the left sidebar, choose **Robot Poses**.
+2. Click **Add Pose**.
+3. Choose the planning group: `arm_group` for the five arm joints or `hand_group` for the two gripper joints.
+4. Enter a unique name (for example, `pose_3`).
+5. Adjust the joint sliders to the desired joint angles within the robot's limits.
+6. Save the pose, and repeat for additional named poses.
+
+Named robot poses are stored in the MoveIt configuration's SRDF (for this robot, `src/tinker_moveit_config/config/URDF_FIN.srdf`).
+
+### 4. Back up the **existing** MoveIt configuration before generating files
+
+Do not put the backup inside `src/`, because colcon may detect it as a second copy of the same ROS package.
+
+~~~bash
+mkdir -p ~/Industrial_Robotics/backups
+cp -a ~/Industrial_Robotics/src/tinker_moveit_config \
+      ~/Industrial_Robotics/backups/tinker_moveit_config_before_poses
+~~~
+
+In MoveIt Setup Assistant, open **Configuration Files** and generate the updated configuration into the **existing** `tinker_moveit_config` location. Review any files offered for regeneration so the working `moveit_controllers.yaml`, custom launches, and joint-limit settings are not accidentally replaced. If uncertain, preserve those working files and update only the SRDF named poses.
+
+### 5. Rebuild and launch Terminal 7 again
+
+Close Setup Assistant, then:
+
+~~~bash
+cd ~/Industrial_Robotics
+
+source /opt/ros/jazzy/setup.bash
+colcon build --symlink-install --packages-select tinker_moveit_config
+source install/setup.bash
+
+ros2 launch /tmp/tinker_moveit_terminal7.launch.py
+~~~
+
+If `/tmp/tinker_moveit_terminal7.launch.py` was cleared by a restart, recreate it using the one-time setup under **Terminal 7** above before launching.
+
+### 6. Select and execute the new pose in MoveIt RViz
+
+1. Open the **MotionPlanning** panel.
+2. Select the group you used when saving the pose (`arm_group` or `hand_group`).
+3. Set **Start State** to `<current>`.
+4. Select the newly saved pose (such as `pose_3`) under **Goal State**.
+5. Choose **Plan & Execute** to plan from the latest actual Gazebo joint positions and execute the motion.
+
+> **Safety and compatibility:** Edit named poses in Setup Assistant; do not use the ordinary MoveIt RViz window to permanently save new poses. Avoid regenerating the tested controller/launch configuration unnecessarily. Keep other manual control inputs idle while MoveIt executes.
+
