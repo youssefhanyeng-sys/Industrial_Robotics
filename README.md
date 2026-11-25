@@ -1,8 +1,20 @@
 # Industrial Robotics — ROS 2 Robotic Arm Simulation
 
-A robotic arm simulation project using **ROS 2 Jazzy, RViz 2, and Gazebo Sim**.
+A robotic arm simulation project using **ROS 2 Jazzy, RViz 2, Gazebo Harmonic, and MoveIt 2**.
 
 The project includes a robot URDF model, joint controllers, Gazebo physics simulation, and a Python bridge that allows joint sliders to control the simulated robot while RViz visualizes its movement.
+
+## Choose a launch mode
+
+| Mode | Terminals | Use it for |
+| --- | ---: | --- |
+| [Gazebo + MoveIt 2 only](#gazebo--moveit-2-only-two-terminals) | 2 | Motion planning and named arm/gripper poses; recommended for MoveIt testing |
+| [Synchronized manual control](#start-the-synchronized-system--six-terminals) | 6 | Sliders, terminal commands and Tkinter GUI |
+| [Full system with MoveIt 2](#tinker_arm--seven-terminal-launch-six-existing-processes--moveit-2) | 7 | All manual interfaces plus MoveIt |
+| [RViz only](#rviz-only-visualization) | 1 | Visualization without Gazebo |
+| [Legacy slider bridge](#legacy-slider-bridge-four-terminals) | 4 | Older manual control workflow |
+
+Choose **one** mode per session. Do not start another Gazebo instance or a second MoveIt action server.
 
 ## Features
 
@@ -13,6 +25,8 @@ The project includes a robot URDF model, joint controllers, Gazebo physics simul
 - Live synchronization of simulated joint positions with RViz
 - Low-latency Python slider-to-Gazebo bridge
 - Configurable joint movement duration
+- MoveIt 2 motion planning and execution for the arm and gripper
+- Named robot poses and a permanent MoveIt launch file
 
 ## Requirements
 
@@ -37,7 +51,8 @@ sudo apt install -y \
   ros-jazzy-rviz2 \
   ros-jazzy-joint-state-publisher-gui \
   ros-jazzy-robot-state-publisher \
-  ros-jazzy-xacro
+  ros-jazzy-xacro \
+  ros-jazzy-moveit python3-tk
 ```
 
 ## Installation
@@ -58,9 +73,59 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-## Launching the Complete Simulation
+## Gazebo + MoveIt 2 only (two terminals)
 
-The full interactive simulation uses four terminals.
+This is the simplest mode for planning and executing arm or gripper poses, and the recommended starting point when troubleshooting MoveIt. Build the workspace using the installation steps above before launching.
+
+### Terminal 1 — Gazebo
+
+~~~bash
+cd ~/Industrial_Robotics
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+
+export GZ_SIM_RESOURCE_PATH="$HOME/Industrial_Robotics/src:$HOME/Industrial_Robotics/install/URDF_FIN/share:${GZ_SIM_RESOURCE_PATH}"
+
+ros2 launch URDF_FIN gazebo.launch.py
+~~~
+
+Wait until the robot appears and both controllers are active. Keep this terminal running.
+
+### Terminal 2 — MoveIt 2 + MoveIt RViz
+
+~~~bash
+cd ~/Industrial_Robotics
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+
+ros2 launch tinker_moveit_config terminal7.launch.py
+~~~
+
+This is the same permanent launcher used by Terminal 7 in the full system. It starts `move_group` and MoveIt RViz with simulation time enabled. It does not start Gazebo again.
+
+Do not start the standalone RViz window, synchronization hub, sliders, terminal controller or Tkinter GUI in this mode.
+
+### Use MoveIt
+
+1. Open the **MotionPlanning** panel.
+2. Select `arm_group` (five arm joints) or `hand_group` (two gripper joints).
+3. Set **Start State** to `<current>`.
+4. Select a named **Goal State** different from the current pose.
+5. For initial tests, set velocity and acceleration scaling to `0.2`.
+6. Click **Plan**. If planning succeeds and the path looks correct, click **Execute**. Alternatively, use **Plan & Execute** for a fresh plan.
+
+Named poses currently in the repository:
+
+| Planning group | Saved poses |
+| --- | --- |
+| `arm_group` | `zero_pose`, `JOE_POSE`, `DINA_POSE`, `AW_POSE`, `NATALIE_POSE` |
+| `hand_group` | `open_hand`, `half_open_hand`, `close_hand` |
+
+The names are defined in [URDF_FIN.srdf](src/tinker_moveit_config/config/URDF_FIN.srdf). A saved pose still needs to pass collision and joint-limit checks before execution.
+
+## Legacy slider bridge (four terminals)
+
+This is the older interactive simulation workflow. Use it separately from the six- and seven-terminal modes.
 
 ### Terminal 1 — Launch Gazebo
 
@@ -69,7 +134,7 @@ cd ~/Industrial_Robotics
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 
-export GZ_SIM_RESOURCE_PATH="$HOME/Industrial_Robotics/src:${GZ_SIM_RESOURCE_PATH}"
+export GZ_SIM_RESOURCE_PATH="$HOME/Industrial_Robotics/src:$HOME/Industrial_Robotics/install/URDF_FIN/share:${GZ_SIM_RESOURCE_PATH}"
 
 ros2 launch URDF_FIN gazebo.launch.py
 ```
@@ -186,7 +251,7 @@ joint_trajectory_controller   active
 Set the Gazebo resource path before launching:
 
 ```bash
-export GZ_SIM_RESOURCE_PATH="$HOME/Industrial_Robotics/src:${GZ_SIM_RESOURCE_PATH}"
+export GZ_SIM_RESOURCE_PATH="$HOME/Industrial_Robotics/src:$HOME/Industrial_Robotics/install/URDF_FIN/share:${GZ_SIM_RESOURCE_PATH}"
 ```
 
 This helps Gazebo resolve the STL mesh files referenced by the robot description.
@@ -243,7 +308,14 @@ Industrial_Robotics/
 │   │   │   └── slider_bridge.py
 │   │   ├── urdf/
 │   │   └── package.xml
-│   └── tinker_robot/
+│   ├── tinker_robot/
+│   └── tinker_moveit_config/
+│       ├── config/
+│       │   ├── URDF_FIN.srdf
+│       │   ├── joint_limits.yaml
+│       │   └── moveit_controllers.yaml
+│       └── launch/
+│           └── terminal7.launch.py
 ├── README.md
 └── .gitignore
 ```
@@ -474,24 +546,9 @@ This setup **retains the original six-terminal commands exactly as documented ab
 
 ### Before starting
 
-You need a **working local MoveIt configuration package** named `tinker_moveit_config`. **This package is not currently present on the GitHub `main` branch**, so a fresh clone alone cannot run Terminal 7. Install MoveIt 2 for Jazzy and build/source your local configuration in the workspace.
+The MoveIt configuration package `tinker_moveit_config` and its permanent [Terminal 7 launcher](src/tinker_moveit_config/launch/terminal7.launch.py) are included in this repository. Install MoveIt 2 for Jazzy using the installation instructions above, then build and source the workspace.
 
-**Permanent controller setting:** In your existing `src/URDF_FIN/config/URDF_FIN_controllers.yaml`, add this line **inside the existing** `joint_trajectory_controller → ros__parameters` mapping (not under `controller_manager`):
-
-~~~yaml
-    allow_partial_joints_goal: true
-~~~
-
-The same controller handles all seven joints; this setting lets it accept arm-only (5-joint) and gripper-only (2-joint) trajectories. Rebuild `URDF_FIN`, then **restart Gazebo**:
-
-~~~bash
-cd ~/Industrial_Robotics
-source /opt/ros/jazzy/setup.bash
-colcon build --symlink-install --packages-select URDF_FIN
-source install/setup.bash
-~~~
-
-> The YAML currently committed to GitHub does **not** include this setting yet. Apply it to your local YAML before launching, or commit your tested YAML separately.
+The committed [controller YAML](src/URDF_FIN/config/URDF_FIN_controllers.yaml) already enables `allow_partial_joints_goal: true` under `joint_trajectory_controller.ros__parameters`. This lets the shared seven-joint controller accept arm-only and gripper-only trajectories. No manual YAML modification or temporary launch file is required.
 
 ### Terminal 1 — Gazebo
 
@@ -555,58 +612,26 @@ ros2 run tinker_robot joint_gui_controller
 
 ### Terminal 7 — MoveIt 2 + MoveIt RViz (one terminal)
 
-**Run these commands in Terminal 7.** The launch file must already exist (see the one-time setup below). This starts MoveIt 2 and MoveIt RViz without launching Gazebo again.
+Run these commands in Terminal 7 after Gazebo's controllers are active.
 
 ~~~bash
 cd ~/Industrial_Robotics
-
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 
-ros2 launch /tmp/tinker_moveit_terminal7.launch.py
+ros2 launch tinker_moveit_config terminal7.launch.py
 ~~~
 
-The original RViz (Terminal 2) and MoveIt RViz (Terminal 7) open as separate windows.
+The original RViz (Terminal 2) and MoveIt RViz (Terminal 7) open as separate windows. The permanent launch file is installed by the MoveIt package and survives WSL restarts. No temporary file is needed.
 
-<details>
-<summary>One-time setup: create the Terminal 7 launch file (only if it is missing)</summary>
-
-Ubuntu can clear `/tmp` after restarting. If `/tmp/tinker_moveit_terminal7.launch.py` is missing, create it before running the short Terminal 7 command:
+If the package cannot be found, rebuild it and source the workspace again:
 
 ~~~bash
-cat > /tmp/tinker_moveit_terminal7.launch.py <<'EOF'
-import os
-from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import SetParameter
-from ament_index_python.packages import get_package_share_directory
-
-def generate_launch_description():
-    pkg = get_package_share_directory('tinker_moveit_config')
-
-    moveit = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg, 'launch', 'move_group.launch.py')
-        )
-    )
-
-    rviz = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg, 'launch', 'moveit_rviz.launch.py')
-        )
-    )
-
-    return LaunchDescription([
-        SetParameter(name='use_sim_time', value=True),
-        moveit,
-        rviz
-    ])
-EOF
-
+cd ~/Industrial_Robotics
+source /opt/ros/jazzy/setup.bash
+colcon build --symlink-install --packages-select URDF_FIN tinker_moveit_config
+source install/setup.bash
 ~~~
-
-</details>
 
 ### Verify and use the system
 
@@ -619,11 +644,15 @@ ros2 control list_controllers
 ros2 param get /joint_trajectory_controller allow_partial_joints_goal
 ros2 param get /move_group use_sim_time
 ros2 topic echo /clock --once
+ros2 action info /move_action
+ros2 action info /execute_trajectory
+ros2 action info /joint_trajectory_controller/follow_joint_trajectory
+ros2 topic echo /joint_states --once
 ~~~
 
-Both controllers should be `active`. Both parameter checks should return `True`, and `/clock` should publish Gazebo simulation time.
+Both controllers should be `active`. Both parameter checks should return `True`, `/clock` should publish Gazebo simulation time, and each action should have exactly one action server.
 
-In **MoveIt RViz**, select the `arm_group` planning group, use Start State `<current>`, choose a different valid goal (for example `pose_2`), and press **Plan & Execute**. This computes a fresh trajectory from the latest robot state instead of executing an old stored plan.
+In **MoveIt RViz**, select the `arm_group` planning group, use Start State `<current>`, choose a different valid goal (for example `zero_pose` or `JOE_POSE`), and press **Plan & Execute**. This computes a fresh trajectory from the latest robot state instead of executing an old stored plan.
 
 ### Synchronization and command-conflict warning
 
@@ -642,7 +671,7 @@ Use **MoveIt Setup Assistant** to create named poses such as `pose_3`, `home`, o
 
 ### 1. Open MoveIt Setup Assistant in a separate terminal
 
-For editing, stop **Terminal 7 (MoveIt + MoveIt RViz)** first, and leave the original six-terminal commands untouched. Then:
+For editing, stop MoveIt and its RViz window first (Terminal 7 in the full system, or Terminal 2 in the two-terminal mode). Keep Gazebo running if desired and leave manual controls idle. Then:
 
 ~~~bash
 cd ~/Industrial_Robotics
@@ -656,7 +685,7 @@ ros2 launch moveit_setup_assistant setup_assistant.launch.py
 ### 2. Load your **existing** MoveIt configuration
 
 1. Choose **Edit Existing MoveIt Configuration Package**, **not** Create New.
-2. Select `/home/joe/Industrial_Robotics/src/tinker_moveit_config`.
+2. Select `~/Industrial_Robotics/src/tinker_moveit_config`.
 3. Wait for the robot and its existing planning groups and poses to load.
 
 ### 3. Create the pose
@@ -674,19 +703,19 @@ Named robot poses are stored in the MoveIt configuration's SRDF (for this robot,
 
 **Clicking Save in Robot Poses does not necessarily write the updated poses to the installed MoveIt configuration.** The tested procedure is to regenerate the SRDF through **Configuration Files**.
 
-Before generating, back up the existing MoveIt package **outside `src/`** so colcon does not detect a second ROS package:
+Before generating, back up the existing MoveIt package **outside the workspace** so colcon does not detect a second ROS package:
 
 ~~~bash
-mkdir -p ~/Industrial_Robotics/backups
+mkdir -p ~/Industrial_Robotics_backups
 cp -a ~/Industrial_Robotics/src/tinker_moveit_config \
-      ~/Industrial_Robotics/backups/tinker_moveit_config_before_poses
+      ~/Industrial_Robotics_backups/tinker_moveit_config_$(date +%Y%m%d_%H%M%S)
 ~~~
 
 In the **MoveIt Setup Assistant**:
 
 1. Check that the new named pose appears under **Robot Poses** and click **Save**.
 2. Click **Configuration Files** in the left sidebar.
-3. Keep the existing output directory: `/home/joe/Industrial_Robotics/src/tinker_moveit_config`.
+3. Keep the existing output directory: `~/Industrial_Robotics/src/tinker_moveit_config`.
 4. If a **Files Modified** warning appears, acknowledge it and inspect the generation checklist.
 5. **Uncheck every generated file except `config/URDF_FIN.srdf`.**
 6. Confirm `config/moveit_controllers.yaml`, `config/joint_limits.yaml`, and all `launch/*.launch.py` files are **unchecked**.
@@ -727,10 +756,10 @@ source /opt/ros/jazzy/setup.bash
 colcon build --symlink-install --packages-select tinker_moveit_config
 source install/setup.bash
 
-ros2 launch /tmp/tinker_moveit_terminal7.launch.py
+ros2 launch tinker_moveit_config terminal7.launch.py
 ~~~
 
-If `/tmp/tinker_moveit_terminal7.launch.py` was cleared by a restart, recreate it using the one-time setup under **Terminal 7** above before launching.
+This uses the same permanent launcher in both the two-terminal and seven-terminal modes.
 
 ### 6. Select and execute the new pose in MoveIt RViz
 
@@ -742,3 +771,12 @@ If `/tmp/tinker_moveit_terminal7.launch.py` was cleared by a restart, recreate i
 
 > **Safety and compatibility:** Edit named poses in Setup Assistant; do not use the ordinary MoveIt RViz window to permanently save new poses. Avoid regenerating the tested controller/launch configuration unnecessarily. Keep other manual control inputs idle while MoveIt executes.
 
+
+## MoveIt troubleshooting
+
+- **Duplicate action servers or stale simulation state:** Stop all ROS processes before launching a new session. In WSL, save work first, then run `wsl --shutdown` in Windows PowerShell (this terminates all running WSL distributions). Start with the two-terminal mode and verify the controllers and joint states before launching MoveIt.
+- **Start state outside joint bounds:** Check `ros2 topic echo /joint_states --once`. The URDF limits for Joint_3 are −1.3 to +1.3 rad, and Joint_4 is limited to −π/2 to +π/2 rad (180° total). Avoid exact hard stops; the manual control hub applies additional conservative margins. If the simulation is stuck at an old limit, restart Gazebo before further planning.
+- **Start state in collision or invalid gripper goal:** Inspect the collision report. Left_Joint is limited to −0.78 to 0 rad and Right_Joint to 0 to +0.78 rad. Do not disable collision checking just to make a plan succeed. Inspect the actual state and use a verified collision-free pose.
+- **Planning succeeds but execution fails:** Check the controller action server, simulation time and actual joint feedback. Stop competing manual command publishers and test in the two-terminal mode. Do not launch duplicate MoveIt instances.
+
+These workflows are intended for simulation; disconnect physical hardware during troubleshooting.
