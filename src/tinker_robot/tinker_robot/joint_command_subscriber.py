@@ -8,6 +8,8 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import String
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from control_msgs.msg import JointTrajectoryControllerState
+from action_msgs.msg import GoalStatusArray
+# MOVEIT_SYNC_PATCH_V1: mirror MoveIt action feedback; prevent command contention.
 from .sync_common import JOINTS, load_limits, nearest, name_for, deg_range
 
 SLIDER_CHANGE = 0.004  # slider quantization/radians
@@ -23,6 +25,8 @@ class SyncedController(Node):
         self.block_slider_until = 0.0
         self.last_feedback_log = 0.0
         self.watch = None
+        self.moveit_active = False
+        self.last_moveit_sync = 0.0
         self.trajectory_pub = self.create_publisher(
             JointTrajectory, '/joint_trajectory_controller/joint_trajectory', 10)
         self.sync_pub = self.create_publisher(JointState, '/tinker/joint_sync', 10)
@@ -33,6 +37,9 @@ class SyncedController(Node):
             self.on_state, 10)
         self.create_subscription(String, '/tinker/joint_request', self.on_request, 10)
         self.create_subscription(JointState, '/slider_joint_states', self.on_slider, 10)
+        self.create_subscription(
+            GoalStatusArray, '/joint_trajectory_controller/_action/status',
+            self.on_moveit_status, 10)
         self.create_timer(0.5, self.timer)
         self.say('SYNC HUB started. Waiting for Gazebo controller feedback.')
         for j in JOINTS:
@@ -50,11 +57,43 @@ class SyncedController(Node):
         self.actual = dict(zip(msg.joint_names, msg.feedback.positions))
         if len(msg.joint_names) == len(msg.reference.positions):
             self.reference = dict(zip(msg.joint_names, msg.reference.positions))
+        if self.moveit_active and self.targets is not None:
+            # Mirror the controller commanded reference while MoveIt owns execution.
+            for j in JOINTS:
+                if j in self.reference:
+                    self.targets[j] = float(self.reference[j])
+            now = time.monotonic()
+            if now - self.last_moveit_sync >= 0.2:
+                self.last_moveit_sync = now
+                self.block_slider_until = now + 0.6
+                self.publish_targets()
+                self.publish_sync()
         if self.targets is None and all(j in self.actual for j in JOINTS):
             self.targets = {j: self.actual[j] for j in JOINTS}
             self.say('READY: all seven controller joints detected; synchronized modes enabled.')
             self.publish_sync()
             self.publish_targets()
+
+    def on_moveit_status(self, msg):
+        # FollowJointTrajectory statuses: accepted=1, executing=2, canceling=3.
+        executing = any(int(s.status) in (1, 2, 3) for s in msg.status_list)
+        if executing == self.moveit_active:
+            return
+        self.moveit_active = executing
+        self.block_slider_until = time.monotonic() + 1.0
+        if executing:
+            self.say('MOVEIT ACTIVE: manual commands temporarily locked.')
+        else:
+            # Preserve the actual final trajectory reference as shared target.
+            if self.targets is not None:
+                for j in JOINTS:
+                    if j in self.reference:
+                        self.targets[j] = float(self.reference[j])
+                    elif j in self.actual:
+                        self.targets[j] = float(self.actual[j])
+                self.publish_targets()
+                self.publish_sync()
+            self.say('MOVEIT FINISHED: manual commands available.')
 
     def publish_sync(self):
         if self.targets is None:
@@ -75,6 +114,9 @@ class SyncedController(Node):
         self.target_pub.publish(msg)
 
     def publish_trajectory(self, origin):
+        if self.moveit_active:
+            self.say('BUSY: MoveIt controls the trajectory; manual command not sent.')
+            return
         if self.targets is None:
             return
         if self.trajectory_pub.get_subscription_count() == 0:
@@ -91,6 +133,9 @@ class SyncedController(Node):
         self.say(f'{origin}: trajectory sent to Gazebo.')
 
     def on_request(self, msg):
+        if self.moveit_active:
+            self.say('BUSY: MoveIt is executing. Retry your manual command afterward.')
+            return
         # Human-entered terminal/Tk commands are DEGREES: Joint_3 30 [limit]
         fields = msg.data.strip().split()
         if len(fields) not in (2, 3):
@@ -140,6 +185,9 @@ class SyncedController(Node):
 
     def on_slider(self, msg):
         incoming = dict(zip(msg.name, msg.position))
+        if self.moveit_active:
+            self.last_slider = incoming
+            return
         if self.targets is None or not all(j in incoming for j in JOINTS):
             return
         if any(not math.isfinite(incoming[j]) for j in JOINTS):

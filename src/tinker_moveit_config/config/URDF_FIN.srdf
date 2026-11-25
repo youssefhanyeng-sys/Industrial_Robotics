@@ -28,34 +28,33 @@
         <joint name="Joint_4" value="0"/>
         <joint name="Joint_5" value="0"/>
     </group_state>
-    <group_state name="pose_1" group="arm_group">
-        <joint name="Joint_1" value="4.2954"/>
-        <joint name="Joint_2" value="-0.85"/>
-        <joint name="Joint_3" value="-1.6"/>
-        <joint name="Joint_4" value="4.1568"/>
-        <joint name="Joint_5" value="-0.7088"/>
-    </group_state>
-    <group_state name="pose_2" group="arm_group">
-        <joint name="Joint_1" value="3.2216"/>
-        <joint name="Joint_2" value="-0.85"/>
-        <joint name="Joint_3" value="-1.6"/>
-        <joint name="Joint_4" value="2.1477"/>
-        <joint name="Joint_5" value="0.768"/>
-    </group_state>
-    <group_state name="open_hand" group="hand_group">
-        <joint name="Left_Joint" value="-0.65"/>
-        <joint name="Right_Joint" value="0.65"/>
-    </group_state>
-    <group_state name="close_hand" group="hand_group">
-        <joint name="Left_Joint" value="-0.06"/>
-        <joint name="Right_Joint" value="0.06"/>
-    </group_state>
     <group_state name="JOE_POSE" group="arm_group">
-        <joint name="Joint_1" value="3.8104"/>
-        <joint name="Joint_2" value="-0.4743"/>
-        <joint name="Joint_3" value="-1.6"/>
-        <joint name="Joint_4" value="3.949"/>
-        <joint name="Joint_5" value="-1.85"/>
+        <joint name="Joint_1" value="4.2954"/>
+        <joint name="Joint_2" value="0.7655"/>
+        <joint name="Joint_3" value="1.0873"/>
+        <joint name="Joint_4" value="-1.54"/>
+        <joint name="Joint_5" value="1.4169"/>
+    </group_state>
+    <group_state name="DINA_POSE" group="arm_group">
+        <joint name="Joint_1" value="6.24"/>
+        <joint name="Joint_2" value="0.82"/>
+        <joint name="Joint_3" value="1.25"/>
+        <joint name="Joint_4" value="-1.54"/>
+        <joint name="Joint_5" value="1.0588"/>
+    </group_state>
+    <group_state name="AW_POSE" group="arm_group">
+        <joint name="Joint_1" value="1.4895"/>
+        <joint name="Joint_2" value="0.3804"/>
+        <joint name="Joint_3" value="1.25"/>
+        <joint name="Joint_4" value="-1.54"/>
+        <joint name="Joint_5" value="-0.3508"/>
+    </group_state>
+    <group_state name="NATALIE_POSE" group="arm_group">
+        <joint name="Joint_1" value="0.03"/>
+        <joint name="Joint_2" value="-0.82"/>
+        <joint name="Joint_3" value="-0.4331"/>
+        <joint name="Joint_4" value="-1.4319"/>
+        <joint name="Joint_5" value="1.305"/>
     </group_state>
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="Left_Link" link2="Link_1" reason="Never"/>
@@ -85,4 +84,19 @@
     <disable_collisions link1="Link_5" link2="Right_Link" reason="Adjacent"/>
     <disable_collisions link1="Link_5" link2="base_link" reason="Never"/>
     <disable_collisions link1="Right_Link" link2="base_link" reason="Never"/>
+
+    <group_state name="open_hand" group="hand_group">
+        <joint name="Left_Joint" value="-0.65"/>
+        <joint name="Right_Joint" value="0.65"/>
+    </group_state>
+
+    <group_state name="half_open_hand" group="hand_group">
+        <joint name="Left_Joint" value="-0.35"/>
+        <joint name="Right_Joint" value="0.35"/>
+    </group_state>
+
+    <group_state name="close_hand" group="hand_group">
+        <joint name="Left_Joint" value="-0.06"/>
+        <joint name="Right_Joint" value="0.06"/>
+    </group_state>
 </robot>
